@@ -91,14 +91,15 @@ Launch the above URL in your browser to access the system.
 ## 📁 File Structure
 
 ```
-├── index.html        ← Login page
-├── admin.html        ← Admin dashboard
-├── dashboard.html    ← User booking page
-├── config.js         ← Supabase configuration
-├── logo.jpeg         ← OCS logo
-├── user.text         ← Admin,User credentials  
-├── creating_tables.sql
-├── insert_rooms.sql
-├── rls_policies.sql 
-└── Screenshots
+├── index.html                      ← Login page
+├── admin.html                      ← Admin dashboard
+├── dashboard.html                  ← User booking page
+├── config.js                       ← Supabase configuration
+├── logo.jpeg                       ← OCS logo
+├── user.text                       ← Admin,User credentials
+├── OCS_IITH_Full_Task_Document.pdf ← Task Details
+├── creating_tables.sql             ← Create tables sql query
+├── insert_rooms.sql                ← Insert rooms sql query
+├── rls_policies.sql                ← RLS Policies sql query
+└── Screenshots                     ← Screenshots
 ```
