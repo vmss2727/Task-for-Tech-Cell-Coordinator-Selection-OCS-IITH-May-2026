@@ -100,6 +100,5 @@ Launch the above URL in your browser to access the system.
 ├── OCS_IITH_Full_Task_Document.pdf ← Task Details
 ├── creating_tables.sql             ← Create tables sql query
 ├── insert_rooms.sql                ← Insert rooms sql query
-├── rls_policies.sql                ← RLS Policies sql query
 └── Screenshots                     ← Screenshots
 ```
