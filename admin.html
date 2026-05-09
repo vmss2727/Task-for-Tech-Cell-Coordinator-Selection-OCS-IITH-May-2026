@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard – OCS IITH</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+    .navbar-custom { background: linear-gradient(135deg, #FFA500, #e40a0a); }
+    .nav-tabs .nav-link.active { font-weight: 600; color: #0a1628; border-bottom: 3px solid #0a1628; }
+    .nav-tabs .nav-link { color: #555; }
+    .card { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    .badge-admin { background: #1a3a5c; }
+    .badge-user { background: #198754; }
+    .stat-card { border-radius: 14px; color: white; padding: 20px; }
+    .btn-sm { border-radius: 8px; }
+    .purpose-badge { font-size: 11px; }
+    .ocs-logo {
+      width: 50px; height: 50px;
+      border-radius: 50%; 
+    }
+    #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.8); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  </style>
+</head>
+<body>
+
+<!-- loading -->
+<div id="loading">
+  <div class="spinner-border text-primary"></div>
+</div>
+
+<!-- nav bar -->
+<nav class="navbar navbar-custom navbar-dark px-4 py-3">
+  <div class="d-flex align-items-center gap-2">
+    <img src="logo.jpeg" class="ocs-logo" alt="OCS Logo">
+    <span class="navbar-brand fw-bold mb-0">OCS IITH Admin</span>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <span class="text-white small" id="admin-name"></span>
+    <button class="btn btn-sm btn-outline-light" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+  <!-- Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card" style="background: linear-gradient(135deg,#0a1628,#1a3a5c)">
+        <div class="small opacity-75">Total Users</div>
+        <div class="fs-2 fw-bold" id="stat-users">–</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card" style="background: linear-gradient(135deg,#198754,#20c997)">
+        <div class="small opacity-75">Total Rooms</div>
+        <div class="fs-2 fw-bold" id="stat-rooms">–</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card" style="background: linear-gradient(135deg,#dc3545,#fd7e14)">
+        <div class="small opacity-75">Active Bookings</div>
+        <div class="fs-2 fw-bold" id="stat-bookings">–</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card" style="background: linear-gradient(135deg,#6f42c1,#d63384)">
+        <div class="small opacity-75">Available Rooms</div>
+        <div class="fs-2 fw-bold" id="stat-available">–</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" id="adminTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#users-tab">Users</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#rooms-tab"> Rooms</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#bookings-tab"> All Bookings</a></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- USERS TAB -->
+    <div class="tab-pane fade show active" id="users-tab">
+      <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">User Management</h5>
+          <button class="btn btn-primary btn-sm" onclick="openCreateUserModal()">+ Create User</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead class="table-light">
+              <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="6" class="text-center text-muted py-4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOMS TAB -->
+    <div class="tab-pane fade" id="rooms-tab">
+      <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Room Management</h5>
+          <button class="btn btn-primary btn-sm" onclick="openAddRoomModal()">+ Add Room</button>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <select id="filter-block" class="form-select form-select-sm" onchange="loadRooms()">
+              <option value="">All Blocks</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead class="table-light">
+              <tr><th>Block</th><th>Room</th><th>Capacity</th><th>Allowed Purposes</th><th>Status</th><th>Notes</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="rooms-table-body">
+              <tr><td colspan="7" class="text-center text-muted py-4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS TAB -->
+    <div class="tab-pane fade" id="bookings-tab">
+      <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">All Bookings</h5>
+          <div class="d-flex gap-2">
+            <input type="date" id="filter-date" class="form-control form-control-sm" onchange="loadAllBookings()"/>
+            <select id="filter-purpose" class="form-select form-select-sm" onchange="loadAllBookings()">
+              <option value="">All Purposes</option>
+              <option value="OA">OA</option>
+              <option value="Interview">Interview</option>
+              <option value="PPT">PPT</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead class="table-light">
+              <tr><th>Date</th><th>Time</th><th>Room</th><th>Purpose</th><th>Booked By</th><th>Participants</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="bookings-table-body">
+              <tr><td colspan="8" class="text-center text-muted py-4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!--CREATE USER MODAL -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="user-modal-error" class="alert alert-danger d-none small"></div>
+        <div class="mb-3">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="new-user-name" class="form-control" placeholder="e.g. Rahul Sharma"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email *</label>
+          <input type="email" id="new-user-email" class="form-control" placeholder="user@iith.ac.in"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Temporary Password *</label>
+          <input type="text" id="new-user-password" class="form-control" placeholder="Min 6 characters"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Role *</label>
+          <select id="new-user-role" class="form-select">
+            <option value="user">Core Member (can book rooms)</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="create-user-btn" onclick="createUser()">Create User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ROOM MODAL-->
+<div class="modal fade" id="addRoomModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0">
+      <div class="modal-header">
+        <h5 class="modal-title" id="room-modal-title">Add New Room</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="room-modal-error" class="alert alert-danger d-none small"></div>
+        <input type="hidden" id="edit-room-id"/>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Block *</label>
+            <input type="text" id="room-block" class="form-control" placeholder="e.g. A Block"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Room Name *</label>
+            <input type="text" id="room-name" class="form-control" placeholder="e.g. A-LH-1"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Capacity *</label>
+            <input type="number" id="room-capacity" class="form-control" placeholder="e.g. 80"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Status</label>
+            <select id="room-status" class="form-select">
+              <option value="true">Available</option>
+              <option value="false">Unavailable</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Allowed Purposes</label>
+            <div class="d-flex gap-3">
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="p-oa" value="OA" checked/><label class="form-check-label" for="p-oa">OA</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="p-interview" value="Interview" checked/><label class="form-check-label" for="p-interview">Interview</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="p-ppt" value="PPT" checked/><label class="form-check-label" for="p-ppt">PPT</label></div>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Notes</label>
+            <input type="text" id="room-notes" class="form-control" placeholder="Any special constraints…"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="save-room-btn" onclick="saveRoom()">Save Room</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentAdminId = null;
+
+// intial
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return window.location.href = 'index.html';
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
+  if (!profile || profile.role !== 'admin') return window.location.href = 'index.html';
+
+  currentAdminId = session.user.id;
+  document.getElementById('admin-name').textContent = profile.name;
+
+  document.getElementById('loading').style.display = 'none';
+
+  loadStats();
+  loadUsers();
+  loadRooms();
+  loadAllBookings();
+})();
+
+//log out ffn
+async function logout() {
+  await db.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+// load stats fn
+async function loadStats() {
+  const [usersRes, roomsRes, bookingsRes] = await Promise.all([
+    db.from('profiles').select('id', { count: 'exact' }).eq('is_active', true),
+    db.from('rooms').select('id', { count: 'exact' }),
+    db.from('bookings').select('id', { count: 'exact' }).eq('status', 'confirmed'),
+  ]);
+  const availRes = await db.from('rooms').select('id', { count: 'exact' }).eq('is_available', true);
+
+  document.getElementById('stat-users').textContent = usersRes.count ?? 0;
+  document.getElementById('stat-rooms').textContent = roomsRes.count ?? 0;
+  document.getElementById('stat-bookings').textContent = bookingsRes.count ?? 0;
+  document.getElementById('stat-available').textContent = availRes.count ?? 0;
+}
+
+// load user fn
+async function loadUsers() {
+  const { data: users, error } = await db.from('profiles').select('*').order('created_at', { ascending: false });
+  const tbody = document.getElementById('users-table-body');
+
+  if (error || !users.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No users found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => `
+    <tr class="${!u.is_active ? 'table-secondary text-muted' : ''}">
+      <td class="fw-semibold">${u.name}</td>
+      <td>${u.email}</td>
+      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td>
+        <span class="badge ${u.is_active ? 'bg-success' : 'bg-secondary'}">
+          ${u.is_active ? 'Active' : 'Deactivated'}
+        </span>
+      </td>
+      <td class="small">${new Date(u.created_at).toLocaleDateString()}</td>
+      <td>
+        ${u.role !== 'admin' ? `
+          <button class="btn btn-sm ${u.is_active ? 'btn-outline-danger' : 'btn-outline-success'} btn-sm"
+            onclick="toggleUser('${u.id}', ${u.is_active})">
+            ${u.is_active ? 'Deactivate' : 'Activate'}
+          </button>` : '<span class="text-muted small">–</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+
+function openCreateUserModal() {
+  document.getElementById('new-user-name').value = '';
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-password').value = '';
+  document.getElementById('new-user-role').value = 'user';
+  document.getElementById('user-modal-error').classList.add('d-none');
+  new bootstrap.Modal(document.getElementById('createUserModal')).show();
+}
+
+//create user fn
+async function createUser() {
+  const name = document.getElementById('new-user-name').value.trim();
+  const email = document.getElementById('new-user-email').value.trim();
+  const password = document.getElementById('new-user-password').value.trim();
+  const role = document.getElementById('new-user-role').value;
+  const errEl = document.getElementById('user-modal-error');
+  const btn = document.getElementById('create-user-btn');
+
+  if (!name || !email || !password) {
+    errEl.textContent = 'All fields are required.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Creating…';
+  errEl.classList.add('d-none');
+
+  
+  const { data: authData, error: authErr } = await db.auth.admin.createUser({
+    email, password, email_confirm: true
+  });
+
+  if (authErr) {
+    errEl.textContent = authErr.message;
+    errEl.classList.remove('d-none');
+    btn.disabled = false; btn.textContent = 'Create User';
+    return;
+  }
+
+  // Insert profile
+  await db.from('profiles').insert({
+    id: authData.user.id, name, email, role, is_active: true
+  });
+
+  btn.disabled = false; btn.textContent = 'Create User';
+  bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+  loadUsers();
+  loadStats();
+  alert(`✅ User "${name}" created successfully!\nEmail: ${email}\nPassword: ${password}`);
+}
+
+
+async function toggleUser(userId, isActive) {
+  if (!confirm(`${isActive ? 'Deactivate' : 'Activate'} this user?`)) return;
+  await db.from('profiles').update({ is_active: !isActive }).eq('id', userId);
+  loadUsers();
+}
+
+// LOADROOMS fn
+async function loadRooms() {
+  const filterBlock = document.getElementById('filter-block').value;
+  let query = db.from('rooms').select('*').order('block').order('room_name');
+  if (filterBlock) query = query.eq('block', filterBlock);
+
+  const { data: rooms } = await query;
+  const tbody = document.getElementById('rooms-table-body');
+
+  if (!rooms || !rooms.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No rooms found.</td></tr>';
+    return;
+  }
+
+  const blocks = [...new Set(rooms.map(r => r.block))].sort();
+  const blockFilter = document.getElementById('filter-block');
+  const currentVal = blockFilter.value;
+  blockFilter.innerHTML = '<option value="">All Blocks</option>' +
+    blocks.map(b => `<option value="${b}" ${b === currentVal ? 'selected' : ''}>${b}</option>`).join('');
+
+  tbody.innerHTML = rooms.map(r => `
+    <tr>
+      <td>${r.block}</td>
+      <td class="fw-semibold">${r.room_name}</td>
+      <td><span class="badge bg-secondary">${r.capacity}</span></td>
+      <td>${(r.allowed_purposes || []).map(p => `<span class="badge bg-info text-dark me-1 purpose-badge">${p}</span>`).join('')}</td>
+      <td>
+        <span class="badge ${r.is_available ? 'bg-success' : 'bg-danger'}">
+          ${r.is_available ? 'Available' : 'Unavailable'}
+        </span>
+      </td>
+      <td class="small text-muted">${r.notes || '–'}</td>
+      <td>
+        <button class="btn btn-outline-primary btn-sm me-1" onclick='openEditRoomModal(${JSON.stringify(r)})'>Edit</button>
+        <button class="btn btn-sm ${r.is_available ? 'btn-outline-warning' : 'btn-outline-success'}"
+          onclick="toggleRoom('${r.id}', ${r.is_available})">
+          ${r.is_available ? 'Disable' : 'Enable'}
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAddRoomModal() {
+  document.getElementById('room-modal-title').textContent = 'Add New Room';
+  document.getElementById('edit-room-id').value = '';
+  document.getElementById('room-block').value = '';
+  document.getElementById('room-name').value = '';
+  document.getElementById('room-capacity').value = '';
+  document.getElementById('room-status').value = 'true';
+  document.getElementById('room-notes').value = '';
+  ['p-oa', 'p-interview', 'p-ppt'].forEach(id => document.getElementById(id).checked = true);
+  document.getElementById('room-modal-error').classList.add('d-none');
+  new bootstrap.Modal(document.getElementById('addRoomModal')).show();
+}
+
+function openEditRoomModal(room) {
+  document.getElementById('room-modal-title').textContent = 'Edit Room';
+  document.getElementById('edit-room-id').value = room.id;
+  document.getElementById('room-block').value = room.block;
+  document.getElementById('room-name').value = room.room_name;
+  document.getElementById('room-capacity').value = room.capacity;
+  document.getElementById('room-status').value = String(room.is_available);
+  document.getElementById('room-notes').value = room.notes || '';
+  const purposes = room.allowed_purposes || [];
+  document.getElementById('p-oa').checked = purposes.includes('OA');
+  document.getElementById('p-interview').checked = purposes.includes('Interview');
+  document.getElementById('p-ppt').checked = purposes.includes('PPT');
+  document.getElementById('room-modal-error').classList.add('d-none');
+  new bootstrap.Modal(document.getElementById('addRoomModal')).show();
+}
+
+async function saveRoom() {
+  const id = document.getElementById('edit-room-id').value;
+  const block = document.getElementById('room-block').value.trim();
+  const room_name = document.getElementById('room-name').value.trim();
+  const capacity = parseInt(document.getElementById('room-capacity').value);
+  const is_available = document.getElementById('room-status').value === 'true';
+  const notes = document.getElementById('room-notes').value.trim();
+  const errEl = document.getElementById('room-modal-error');
+  const btn = document.getElementById('save-room-btn');
+
+  const purposes = ['p-oa','p-interview','p-ppt']
+    .filter(p => document.getElementById(p).checked)
+    .map(p => document.getElementById(p).value);
+
+  if (!block || !room_name || !capacity) {
+    errEl.textContent = 'Block, Room Name and Capacity are required.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const payload = { block, room_name, capacity, is_available, allowed_purposes: purposes, notes: notes || null };
+
+  if (id) {
+    await db.from('rooms').update(payload).eq('id', id);
+  } else {
+    await db.from('rooms').insert(payload);
+  }
+
+  btn.disabled = false; btn.textContent = 'Save Room';
+  bootstrap.Modal.getInstance(document.getElementById('addRoomModal')).hide();
+  loadRooms();
+  loadStats();
+}
+
+async function toggleRoom(roomId, isAvailable) {
+  await db.from('rooms').update({ is_available: !isAvailable }).eq('id', roomId);
+  loadRooms();
+  loadStats();
+}
+
+// load bookings fn
+async function loadAllBookings() {
+  const filterDate = document.getElementById('filter-date').value;
+  const filterPurpose = document.getElementById('filter-purpose').value;
+
+  let query = db.from('bookings').select('*, rooms(room_name, block)').order('date', { ascending: false }).order('start_time', { ascending: false });
+  if (filterDate) query = query.eq('date', filterDate);
+  if (filterPurpose) query = query.eq('purpose', filterPurpose);
+
+  const { data: bookings } = await query.limit(100);
+  const tbody = document.getElementById('bookings-table-body');
+
+  if (!bookings || !bookings.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No bookings found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = bookings.map(b => `
+    <tr class="${b.status === 'cancelled' ? 'table-secondary text-muted' : ''}">
+      <td>${b.date}</td>
+      <td class="small">${b.start_time.slice(0,5)} – ${b.end_time.slice(0,5)}</td>
+      <td>
+        <div class="fw-semibold">${b.rooms?.room_name || b.room_name || '–'}</div>
+        <div class="small text-muted">${b.rooms?.block || b.block || ''}</div>
+      </td>
+      <td><span class="badge bg-primary">${b.purpose}</span></td>
+      <td class="small">${b.booked_by_name || '–'}</td>
+      <td>${b.participants}</td>
+      <td>
+        <span class="badge ${b.status === 'confirmed' ? 'bg-success' : 'bg-secondary'}">
+          ${b.status}
+        </span>
+      </td>
+      <td>
+        ${b.status === 'confirmed' ? `
+          <button class="btn btn-sm btn-outline-danger"
+            onclick="cancelBooking('${b.id}')">Cancel</button>` : '–'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+//cancel booking fn
+async function cancelBooking(bookingId) {
+  if (!confirm('Cancel this booking?')) return;
+  await db.from('bookings').update({ status: 'cancelled' }).eq('id', bookingId);
+  loadAllBookings();
+  loadStats();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Admin Email,password
+    admin@ocs.iith.ac.in
+    1q2w3e4r5t 
+
+User1 Email,password
+    user1@ocs.iith.ac.in
+    1q2w3e4r5t

@@ -1,0 +1,66 @@
+insert into rooms (block, room_name, capacity, allowed_purposes) values
+  -- A Block
+  ('A Block', 'A-Class Room 320', 80, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-AUDITORIUM', 289, array['PPT']),
+  ('A Block', 'A-Class Room 111', 70, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-Class Room 112', 80, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-Class Room 114', 36, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-Class Room 117', 84, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-Class Room 118', 84, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-Class Room 119', 108, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-Class Room 220', 40, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-Class Room 221', 120, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-LH-1', 184, array['OA', 'Interview', 'PPT']),
+  ('A Block', 'A-LH-2', 184, array['OA', 'Interview', 'PPT']),
+  -- BT/BM Block
+  ('BT/BM Block', 'BT/BM-009', 24, array['OA', 'Interview', 'PPT']),
+  ('BT/BM Block', 'BT/BM-010', 24, array['OA', 'Interview', 'PPT']),
+  ('BT/BM Block', 'BT/BM-118', 60, array['OA', 'Interview', 'PPT']),
+  -- C Block
+  ('C Block', 'C-LH-10', 68, array['OA', 'Interview', 'PPT']),
+  ('C Block', 'C-LH-2', 138, array['OA', 'Interview', 'PPT']),
+  ('C Block', 'C-LH-3', 100, array['OA', 'Interview', 'PPT']),
+  ('C Block', 'C-LH-4', 60, array['OA', 'Interview', 'PPT']),
+  ('C Block', 'C-LH-5', 60, array['OA', 'Interview', 'PPT']),
+  ('C Block', 'C-LH-6', 60, array['OA', 'Interview', 'PPT']),
+  ('C Block', 'C-LH-7', 70, array['OA', 'Interview', 'PPT']),
+  ('C Block', 'C-LH-9', 66, array['OA', 'Interview', 'PPT']),
+  -- CSE Block
+  ('CSE Block', 'CSE-LH-01', 70, array['OA', 'Interview', 'PPT']),
+  ('CSE Block', 'CSE-LH-02', 70, array['OA', 'Interview', 'PPT']),
+  ('CSE Block', 'CSE-LH-03', 70, array['OA', 'Interview', 'PPT']),
+  -- CY Block
+  ('CY Block', 'CY-LH-1', 30, array['OA', 'Interview', 'PPT']),
+  ('CY Block', 'CY-LH-2', 40, array['OA', 'Interview', 'PPT']),
+  ('CY Block', 'CY-LH-3', 90, array['OA', 'Interview', 'PPT']),
+  -- EE Block
+  ('EE Block', 'EE-004(GF)', 80, array['OA', 'Interview', 'PPT']),
+  ('EE Block', 'EE-20 (SF)', 60, array['OA', 'Interview', 'PPT']),
+  -- LHC Block
+  ('LHC', 'LHC-01', 72, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-02', 72, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-03', 120, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-04', 200, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-05', 800, array['PPT']),
+  ('LHC', 'LHC-06', 320, array['OA', 'PPT']),
+  ('LHC', 'LHC-07', 200, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-08', 120, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-09', 72, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-10', 72, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-11', 120, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-12', 200, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-13', 320, array['OA', 'PPT']),
+  ('LHC', 'LHC-14', 200, array['OA', 'Interview', 'PPT']),
+  ('LHC', 'LHC-15', 120, array['OA', 'Interview', 'PPT']),
+  -- MA Block
+  ('MA Block', 'MA-01', 56, array['OA', 'Interview', 'PPT']),
+  ('MA Block', 'MA-02', 56, array['OA', 'Interview', 'PPT']),
+  ('MA Block', 'MA-114', 30, array['OA', 'Interview', 'PPT']),
+  -- MSME Block
+  ('MSME Block', 'MSME-LH-1', 36, array['OA', 'Interview', 'PPT']),
+  ('MSME Block', 'MSME-LH-2', 60, array['OA', 'Interview', 'PPT']),
+  ('MSME Block', 'MSME-LH-3', 106, array['OA', 'Interview', 'PPT']),
+  -- PH Block
+  ('PH Block', 'PH-1', 80, array['OA', 'Interview', 'PPT']),
+  ('PH Block', 'PH-2', 60, array['OA', 'Interview', 'PPT']),
+  ('PH Block', 'PH-3', 50, array['OA', 'Interview', 'PPT']);

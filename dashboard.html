@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book a Room – OCS IITH</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+    .navbar-custom { background: linear-gradient(135deg, #FFA500, #e40a0a); }
+    .card { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); }
+    .room-card {
+      border: 2px solid #e9ecef;
+      border-radius: 14px;
+      padding: 20px;
+      transition: all .2s;
+      cursor: pointer;
+    }
+    .ocs-logo {
+      width: 50px; height: 50px;
+      border-radius: 50%; 
+    }
+    .room-card:hover { border-color: #1a3a5c; background: #f8f9fa; }
+    .room-card.selected { border-color: #1a3a5c; background: #eef2f7; }
+    .purpose-badge { font-size: 11px; }
+    .nav-tabs .nav-link.active { font-weight: 600; color: #0a1628; border-bottom: 3px solid #0a1628; }
+    .nav-tabs .nav-link { color: #555; }
+    #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.8); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  </style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner-border text-primary"></div></div>
+
+<nav class="navbar navbar-custom navbar-dark px-4 py-3">
+
+  <div class="d-flex align-items-center gap-2">
+    <img src="logo.jpeg" class="ocs-logo" alt="OCS Logo">
+    <span class="navbar-brand fw-bold mb-0">OCS IITH Room Booking</span>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <span class="text-white small" id="user-name-display"></span>
+    <button class="btn btn-sm btn-outline-light" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="container py-4">
+
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#book-tab">Search &amp; Book</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#my-bookings-tab">My Bookings</a></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- search and book  -->
+
+    <div class="tab-pane fade show active" id="book-tab">
+
+      <!-- Search Filters -->
+      <div class="card p-4 mb-4"> 
+        <h6 class="fw-bold mb-3">Find Available Rooms</h6>
+        <div class="row g-3">
+          
+          <!-- date -->
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Date *</label>
+            <input type="date" id="search-date" class="form-control"/>
+          </div>
+
+          <!-- start time -->
+          <div class="col-md-2">
+            <label class="form-label small fw-semibold">Start Time *</label>
+            <input type="time" id="search-start" class="form-control"/>
+          </div>
+
+          <!-- end time -->
+          <div class="col-md-2">
+            <label class="form-label small fw-semibold">End Time *</label>
+            <input type="time" id="search-end" class="form-control"/>
+          </div>
+
+          <!-- purpose -->
+          <div class="col-md-2">
+            <label class="form-label small fw-semibold">Purpose *</label>
+            <select id="search-purpose" class="form-select">
+              <option value="">Select…</option>
+              <option value="OA">Online Assessment (OA)</option>
+              <option value="Interview">Interview</option>
+              <option value="PPT">Pre-Placement Talk (PPT)</option>
+            </select>
+          </div>
+
+          <!-- strenth-->
+          <div class="col-md-2">
+            <label class="form-label small fw-semibold">No. of Participants *</label>
+            <input type="number" id="search-participants" class="form-control" placeholder="e.g. 50" min="1"/>
+          </div>
+
+          <!-- search button -->
+          <div class="col-md-1 d-flex align-items-end">
+            <button id="search-btn" class="btn btn-primary w-100" onclick="searchRooms()">Search</button>
+          </div>
+
+          <!-- filter by block -->
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Filter by Block </label>
+            <select id="search-block" class="form-select">
+              <option value="">All Blocks</option>
+            </select>
+          </div>
+          
+          <!-- for sorting button -->
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Sort Rooms By</label>
+            <select id="sort-rooms" class="form-select">    
+              <option value="capacity-low">Capacity: Low → High</option>    
+              <option value="capacity-high"> Capacity: High → Low</option>
+              <option value="block">Block Name</option>    
+              <option value="room"> Room Name</option>
+            </select>
+          </div>
+
+        </div>
+        
+        <!-- shows if error in search -->
+        <div id="search-error" class="alert alert-warning mt-3 d-none small py-2"></div>
+
+      </div>
+
+
+      <!-- Search Results -->
+      <div id="search-results" class="d-none">
+
+        <h6 class="fw-bold mb-3" id="results-heading"></h6>
+
+        <div id="rooms-grid" class="row g-3 mb-4"></div>
+
+        <!-- Confirm booking -->
+        <div id="booking-confirm" class="card p-4 d-none">
+          <h6 class="fw-bold mb-3">✅ Confirm Your Booking</h6>
+          <div class="row g-2 mb-3">
+            <div class="col-md-4"><div class="p-3 bg-light rounded"><div class="small text-muted">Room</div><div class="fw-bold" id="confirm-room"></div></div></div>
+            <div class="col-md-4"><div class="p-3 bg-light rounded"><div class="small text-muted">Date & Time</div><div class="fw-bold" id="confirm-datetime"></div></div></div>
+            <div class="col-md-4"><div class="p-3 bg-light rounded"><div class="small text-muted">Purpose & Participants</div><div class="fw-bold" id="confirm-details"></div></div></div>
+          </div>
+          <button class="btn btn-success px-4" id="confirm-btn" onclick="confirmBooking()">Confirm Booking</button>
+          <button class="btn btn-outline-secondary ms-2" onclick="clearSelection()">Change Room</button>
+        </div>
+      </div>
+    </div>
+
+    <!--MY BOOKINGS TAB-->
+    <div class="tab-pane fade" id="my-bookings-tab">
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3">My Bookings</h6>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead class="table-light">
+              <tr><th>Date</th><th>Time</th><th>Room</th><th>Purpose</th><th>Participants</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="my-bookings-body">
+              <tr><td colspan="7" class="text-center text-muted py-4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- div for Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="success-toast" class="toast bg-success text-white" role="alert">
+    <div class="toast-body fw-semibold" id="toast-message"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let currentProfile = null;
+let selectedRoom = null;
+
+// initial
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return window.location.href = 'index.html';
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
+  if (!profile || !profile.is_active) {
+    await db.auth.signOut();
+    return window.location.href = 'index.html';
+  }
+  if (profile.role === 'admin') return window.location.href = 'admin.html';
+
+  currentUser = session.user;
+  currentProfile = profile;
+
+  document.getElementById('user-name-display').textContent = profile.name;
+
+  // Set today's date as default
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('search-date').value = today;
+  document.getElementById('search-date').min = today;
+
+  document.getElementById('loading').style.display = 'none';
+
+  await loadBlockFilter();
+  await loadMyBookings();
+
+  // Load bookings when tab is switched
+  document.querySelector('[href="#my-bookings-tab"]').addEventListener('click', loadMyBookings);
+})();
+
+
+// logout fn
+async function logout() {
+  await db.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+// filter for blocks
+async function loadBlockFilter() {
+
+  //sql query for storing all available blocks
+  const { data } = await db.from('rooms').select('block').eq('is_available', true);
+
+  //removing duplicATES
+  const blocks = [];
+  for (let i = 0; i < data.length; i++) {
+    const block = data[i].block;
+    if (!blocks.includes(block)) {
+      blocks.push(block);
+    }
+  }
+  blocks.sort();
+
+  //innerhtml for each block
+  const el = document.getElementById('search-block');
+  let html = '<option value="">All Blocks</option>';
+  for (let i = 0; i < blocks.length; i++) {
+    html += `<option value="${blocks[i]}">${blocks[i]}</option>`;
+  }
+  el.innerHTML = html;
+  
+}
+
+//searching rooms
+async function searchRooms() {
+  const date = document.getElementById('search-date').value;
+  const startTime = document.getElementById('search-start').value;
+  const endTime = document.getElementById('search-end').value;
+  const purpose = document.getElementById('search-purpose').value;
+  const participants = parseInt(document.getElementById('search-participants').value);
+  const block = document.getElementById('search-block').value;
+  const errEl = document.getElementById('search-error');
+
+  // Validation
+  errEl.classList.add('d-none');
+
+  //mmissing fields
+  let missingFields = [];
+  if (!date) {
+    missingFields.push("Date");
+  }
+  if (!startTime) {
+    missingFields.push("Start Time");
+  }
+  if (!endTime) {
+    missingFields.push("End Time");
+  }
+  if (!purpose) {
+    missingFields.push("Purpose");
+  }
+  if (!participants) {
+    missingFields.push("Participants");
+  }
+  if (missingFields.length > 0) {
+    errEl.textContent =
+      "⚠️ Please fill: " + missingFields.join(", ");
+    errEl.classList.remove('d-none')
+    return;
+  }
+
+  //time entry erroir
+  if (endTime <= startTime) {
+    errEl.textContent = '⚠️ End time must be after start time.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  //Get all rooms that match requirement and avaliability
+  let roomQuery = db.from('rooms').select('*').eq('is_available', true).gte('capacity', participants).contains('allowed_purposes', [purpose]);
+
+  if (block) roomQuery = roomQuery.eq('block', block);
+
+  const { data: allRooms } = await roomQuery.order('block').order('capacity');
+
+  if (!allRooms || !allRooms.length) {
+    showResults([], date, startTime, endTime, purpose, participants);
+    return;
+  }
+
+  // Find conflicting
+  const { data: bookings } = await db
+    .from('bookings')
+    .select('*')
+    .eq('date', date)
+    .eq('status', 'confirmed');
+  
+
+  //remove conflicting rooms
+  const availableRooms = [];
+
+  for (let i = 0; i < allRooms.length; i++) {
+    let isBooked = false;
+    for (let j = 0; j < bookings.length; j++) {
+      const booking = bookings[j];
+      if (allRooms[i].id === booking.room_id) {
+        if (booking.start_time < endTime && booking.end_time > startTime) {
+          isBooked = true;
+          break;
+        }
+      }
+    }
+    if (!isBooked) {
+      availableRooms.push(allRooms[i]);
+    }
+  }
+  //for sorting
+  const sortType =document.getElementById('sort-rooms').value;
+
+
+  if (sortType === 'capacity-low') {
+    availableRooms.sort((a, b) =>a.capacity - b.capacity);
+  }
+  else if (sortType === 'capacity-high') {
+    availableRooms.sort((a, b) =>b.capacity - a.capacity);
+  }
+  else if (sortType === 'block') {
+    availableRooms.sort((a, b) => a.block.localeCompare(b.block));
+  }
+  else if (sortType === 'room') {
+    availableRooms.sort((a, b) =>a.room_name.localeCompare(b.room_name));
+  }
+  showResults(availableRooms, date, startTime, endTime, purpose, participants);
+}
+
+function showResults(rooms, date, startTime, endTime, purpose, participants) {
+  const resultsDiv = document.getElementById('search-results');
+  const grid = document.getElementById('rooms-grid');
+  const heading = document.getElementById('results-heading');
+
+  resultsDiv.classList.remove('d-none');
+  selectedRoom = null;
+  document.getElementById('booking-confirm').classList.add('d-none');
+
+  if (!rooms.length) {
+    heading.textContent = '❌ No rooms available for your criteria.';
+    grid.innerHTML = '<div class="col-12"><div class="alert alert-warning">No available rooms match your search. Try adjusting the time, date, or expected participants.</div></div>';
+    return;
+  }
+
+  heading.textContent = `✅ ${rooms.length} room(s) available — click to select`;
+
+  let html = "";
+
+  for (let i = 0; i < rooms.length; i++) {
+
+    const r = rooms[i];
+
+    let purposes = "";
+
+    for (let j = 0; j < r.allowed_purposes.length; j++) {
+      purposes +='<span class="badge bg-info text-dark me-1 purpose-badge">' +r.allowed_purposes[j] +'</span>';
+    }
+
+    let notes = "";
+
+    if (r.notes) {
+      notes ='<div class="small text-muted mt-1">' +'📝 ' + r.notes +'</div>';
+    }
+
+    html +=
+
+      '<div class="col-md-4">' +
+
+        '<div class="room-card" ' +
+        'id="room-card-' + r.id + '" ' +
+
+        "onclick='selectRoom(" +
+        `"${r.id}",` +
+        `${JSON.stringify(r)},` +
+        `"${date}",` +
+        `"${startTime}",` +
+        `"${endTime}",` +
+        `"${purpose}",` +
+        `${participants}` +
+        ")'>" +
+
+          '<div class="d-flex justify-content-between align-items-start mb-2">' +
+
+            '<div>' +
+              '<div class="fw-bold fs-6">' +
+                r.room_name +
+              '</div>' +
+
+              '<div class="text-muted small">' +
+                r.block +
+              '</div>' +
+            '</div>' +
+
+            '<span class="badge bg-secondary">' +
+              r.capacity + ' seats' +
+            '</span>' +
+
+          '</div>' +
+
+          '<div class="mb-2">' +
+            purposes +
+          '</div>' +
+
+          notes +
+
+          '<div class="mt-2 text-success small fw-semibold">' +
+            '🟢 Available for your slot' +
+          '</div>' +
+
+        '</div>' +
+
+      '</div>';
+  }
+
+  grid.innerHTML = html;
+}
+
+function selectRoom(roomId, room, date, startTime, endTime, purpose, participants) {
+  
+  // Deselect all
+  document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`room-card-${roomId}`).classList.add('selected');
+
+  selectedRoom = { id: roomId, room, date, startTime, endTime, purpose, participants };
+
+  document.getElementById('confirm-room').textContent = `${room.room_name} (${room.block})`;
+  document.getElementById('confirm-datetime').textContent = `${date} | ${startTime} – ${endTime}`;
+  document.getElementById('confirm-details').textContent = `${purpose} | ${participants} participants`;
+  document.getElementById('booking-confirm').classList.remove('d-none');
+  document.getElementById('booking-confirm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function clearSelection() {
+  selectedRoom = null;
+  document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('booking-confirm').classList.add('d-none');
+}
+
+// CONFIRM BOOKING 
+async function confirmBooking() {
+  if (!selectedRoom) return;
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Booking…';
+
+  const { room, date, startTime, endTime, purpose, participants } = selectedRoom;
+
+  // Double-check for conflicts (re-validate just before insert)
+  const { data: conflicts } = await db
+  .from('bookings')
+  .select('id')
+  .eq('room_id', room.id)
+  .eq('date', date)
+  .eq('status', 'confirmed')
+  .or(`and(start_time.lt.${endTime},end_time.gt.${startTime})`);
+
+  if (conflicts && conflicts.length > 0) {
+    alert('⚠️ This room was just booked by someone else. Please search again.');
+    btn.disabled = false;
+    btn.textContent = 'Confirm Booking';
+    return;
+  }
+
+  const { error } = await db.from('bookings').insert({
+    user_id: currentUser.id,
+    booked_by_name: currentProfile.name,
+    room_id: room.id,
+    room_name: room.room_name,
+    block: room.block,
+    date,
+    start_time: startTime,
+    end_time: endTime,
+    purpose,
+    participants,
+    status: 'confirmed'
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Confirm Booking';
+
+  if (error) {
+    alert('❌ Booking failed: ' + error.message);
+    return;
+  }
+
+  showToast(`✅ Room ${room.room_name} booked for ${date} from ${startTime} till ${endTime}!`);
+  document.getElementById('search-results').classList.add('d-none');
+  loadMyBookings();
+}
+
+// loadMyBookings
+async function loadMyBookings() {
+  const { data: bookings } = await db.from('bookings')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('date', { ascending: false })
+    .order('start_time', { ascending: false });
+
+  const tbody = document.getElementById('my-bookings-body');
+
+  if (!bookings || !bookings.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No bookings yet. Search and book a room!</td></tr>';
+    return;
+  }
+
+  const now = new Date();
+
+  tbody.innerHTML = bookings.map(b => {
+
+    const bookingEnd = new Date(
+      b.date + "T" + b.end_time
+    );
+
+    const isPast = bookingEnd < now;
+    const isCancelled = b.status === 'cancelled';
+    return `
+    <tr class="${isCancelled ? 'table-secondary text-muted' : ''}">
+      <td>${b.date}</td>
+      <td class="small">${b.start_time.slice(0,5)} – ${b.end_time.slice(0,5)}</td>
+      <td>
+        <div class="fw-semibold">${b.room_name}</div>
+        <div class="small text-muted">${b.block}</div>
+      </td>
+      <td><span class="badge bg-primary">${b.purpose}</span></td>
+      <td>${b.participants}</td>
+      <td>
+        <span class="badge ${isCancelled ? 'bg-secondary' : isPast ? 'bg-info' : 'bg-success'}">
+          ${isCancelled ? 'Cancelled' : isPast ? 'Completed' : 'Confirmed'}
+        </span>
+      </td>
+      <td>
+        ${(!isCancelled && !isPast) ? `
+          <button class="btn btn-sm btn-outline-danger" onclick="cancelMyBooking('${b.id}')">Cancel</button>
+        ` : '–'}
+      </td>
+    </tr>
+  `}).join('');
+}
+
+async function cancelMyBooking(bookingId) {
+  if (!confirm('Cancel this booking?')) return;
+  await db.from('bookings').update({ status: 'cancelled' }).eq('id', bookingId).eq('user_id', currentUser.id);
+  showToast('Booking cancelled.');
+  loadMyBookings();
+}
+
+function showToast(msg) {
+  document.getElementById('toast-message').textContent = msg;
+  new bootstrap.Toast(document.getElementById('success-toast')).show();
+}
+</script>
+</body>
+</html>
